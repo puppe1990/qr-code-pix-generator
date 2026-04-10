@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador QR Code Pix</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+</head>
+<body class="min-h-screen bg-slate-950 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.22),_transparent_38%),linear-gradient(180deg,_#0f172a_0%,_#020617_100%)] p-4 text-slate-100 md:p-8">
+  <div class="mx-auto flex min-h-[calc(100vh-2rem)] max-w-5xl items-center justify-center">
+    <div class="grid w-full gap-6 rounded-[32px] border border-white/10 bg-white/95 p-4 shadow-2xl shadow-cyan-950/30 backdrop-blur md:grid-cols-[1.1fr_0.9fr] md:p-6">
+      <section class="rounded-[28px] bg-slate-950 p-8 text-white">
+        <span class="mb-4 inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200">Pix simples</span>
+        <h1 class="text-4xl font-black tracking-tight">Gerador de QR Code Pix que nao atrapalha.</h1>
+        <p class="mt-4 max-w-md text-sm leading-6 text-slate-300">Escolha o tipo da chave, preencha os dados e gere o QR Code com copia e cola em uma modal limpa. Sem adivinhar formato e sem resultado perdido na pagina.</p>
+
+        <div class="mt-8 grid gap-3 text-sm text-slate-300">
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <strong class="block text-white">Tipos de chave</strong>
+            <span class="mt-1 block">CPF, CNPJ, E-mail, Telefone e Aleatoria com validacao basica.</span>
+          </div>
+          <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
+            <strong class="block text-white">Resultado em modal</strong>
+            <span class="mt-1 block">QR Code, valor e Pix copia e cola em destaque para copiar rapido.</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="rounded-[28px] bg-white p-8 text-slate-900">
+        <div class="mb-8">
+          <h2 class="text-3xl font-black tracking-tight text-slate-900">Cobrar com Pix</h2>
+          <p class="mt-2 text-sm leading-6 text-slate-500">Preencha os dados abaixo. A chave e validada conforme o tipo escolhido antes da geracao.</p>
+        </div>
+
+        <form id="pixForm" class="space-y-5">
+          <div>
+            <label for="pixKeyType" class="mb-2 block text-sm font-semibold text-slate-700">Tipo de chave Pix</label>
+            <select
+              id="pixKeyType"
+              class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+              required
+            >
+              <option value="cpf">CPF</option>
+              <option value="cnpj">CNPJ</option>
+              <option value="email">E-mail</option>
+              <option value="phone">Telefone</option>
+              <option value="random">Aleatoria</option>
+            </select>
+          </div>
+
+          <div>
+            <div class="mb-2 flex items-center justify-between gap-3">
+              <label for="pixKey" class="block text-sm font-semibold text-slate-700">Chave Pix</label>
+              <span id="pixKeyHelper" class="text-xs text-slate-400"></span>
+            </div>
+            <input
+              type="text"
+              id="pixKey"
+              class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+              required
+            >
+          </div>
+
+          <div>
+            <label for="merchantName" class="mb-2 block text-sm font-semibold text-slate-700">Nome do Recebedor</label>
+            <input
+              type="text"
+              id="merchantName"
+              placeholder="Seu nome ou empresa"
+              class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+              required
+            >
+          </div>
+
+          <div>
+            <label for="merchantCity" class="mb-2 block text-sm font-semibold text-slate-700">Cidade</label>
+            <input
+              type="text"
+              id="merchantCity"
+              placeholder="Sao Paulo"
+              class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+              required
+            >
+          </div>
+
+          <div>
+            <label for="amount" class="mb-2 block text-sm font-semibold text-slate-700">Valor (opcional)</label>
+            <input
+              type="number"
+              id="amount"
+              placeholder="0.00"
+              step="0.01"
+              min="0"
+              class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+            >
+          </div>
+
+          <p id="formError" class="hidden rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-700"></p>
+
+          <button
+            type="submit"
+            class="w-full rounded-2xl bg-cyan-500 px-4 py-4 text-sm font-bold uppercase tracking-[0.18em] text-slate-950 transition hover:bg-cyan-400"
+          >
+            Gerar QR Code
+          </button>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <div id="resultModal" class="fixed inset-0 z-50 hidden">
+    <div id="modalOverlay" class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm"></div>
+    <div class="relative z-10 flex min-h-full items-center justify-center p-4">
+      <div class="w-full max-w-lg rounded-[28px] bg-white p-6 shadow-2xl shadow-slate-950/40">
+        <div class="flex items-start justify-between gap-4">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.2em] text-cyan-600">QR Code Pix</p>
+            <h3 class="mt-2 text-2xl font-black text-slate-900">Pagamento pronto para copiar</h3>
+          </div>
+          <button
+            id="closeModalBtn"
+            type="button"
+            class="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 text-xl text-slate-600 transition hover:bg-slate-100"
+            aria-label="Fechar modal"
+          >
+            ×
+          </button>
+        </div>
+
+        <div class="mt-6 rounded-[24px] bg-slate-100 p-6">
+          <canvas id="qrCode" class="mx-auto"></canvas>
+        </div>
+
+        <div class="mt-6 space-y-3">
+          <div>
+            <label for="pixCopyPaste" class="mb-2 block text-sm font-semibold text-slate-700">Pix Copia e Cola</label>
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <input
+                type="text"
+                id="pixCopyPaste"
+                readonly
+                class="flex-1 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700"
+              >
+              <button
+                id="copyBtn"
+                type="button"
+                class="inline-flex items-center justify-center rounded-2xl bg-emerald-500 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-400"
+              >
+                Copiar
+              </button>
+            </div>
+          </div>
+
+          <p id="amountDisplay" class="hidden rounded-2xl bg-cyan-50 px-4 py-3 text-center text-base font-bold text-cyan-900"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
