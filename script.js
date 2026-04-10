@@ -90,11 +90,17 @@ function stripAccents(value) {
 }
 
 function sanitizeMerchantName(value) {
-  return stripAccents(value.trim()).replace(/[^A-Za-z0-9 ]/g, '').substring(0, 25);
+  return stripAccents(value.trim())
+    .toUpperCase()
+    .replace(/[^A-Z0-9 ]/g, '')
+    .substring(0, 25);
 }
 
 function sanitizeMerchantCity(value) {
-  return stripAccents(value.trim()).replace(/[^A-Za-z0-9 ]/g, '').substring(0, 15);
+  return stripAccents(value.trim())
+    .toUpperCase()
+    .replace(/[^A-Z0-9 ]/g, '')
+    .substring(0, 15);
 }
 
 function normalizePixKey(type, value) {
