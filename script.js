@@ -33,8 +33,7 @@ class PixPayload {
     ].filter(Boolean);
 
     const payloadPartial = payload.join('');
-    const crcField = this.formatField('63', '04');
-    const payloadFull = payloadPartial + crcField;
+    const payloadFull = payloadPartial + '6304';
 
     return payloadFull + this.crc16(payloadFull);
   }

@@ -133,3 +133,14 @@ test('buildPixPayload uses custom identifier when provided', () => {
   assert.match(payload, /62150511PGTOLOJA123/);
   assert.match(payload, /54071680\.00/);
 });
+
+test('buildPixPayload formats CRC field as 6304 followed by 4 hex characters', () => {
+  const payload = buildPixPayload({
+    pixKeyType: 'cnpj',
+    pixKey: '01.487.734/0001-01',
+    amount: 1680,
+  });
+
+  assert.match(payload, /6304[0-9A-F]{4}$/);
+  assert.doesNotMatch(payload, /630204/);
+});
