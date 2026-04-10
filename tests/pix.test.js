@@ -4,6 +4,12 @@ const {
   normalizePixKey,
   validatePixForm,
   buildPixPayload,
+  buildQrCodeFilename,
+  wrapPixKeyForExport,
+  getPixKeyDisplayValue,
+  getExportCardHeight,
+  getPixKeyTypeLabel,
+  formatAmountForExport,
 } = require('../script.js');
 
 test('normalizePixKey normalizes CPF to digits only', () => {
@@ -143,4 +149,45 @@ test('buildPixPayload formats CRC field as 6304 followed by 4 hex characters', (
 
   assert.match(payload, /6304[0-9A-F]{4}$/);
   assert.doesNotMatch(payload, /630204/);
+});
+
+test('buildQrCodeFilename creates a png filename from identifier', () => {
+  const filename = buildQrCodeFilename('Pedido Loja 123');
+
+  assert.equal(filename, 'pix-qrcode-pedido-loja-123.png');
+});
+
+test('wrapPixKeyForExport splits long pix key into readable lines', () => {
+  const lines = wrapPixKeyForExport('1234567890123456789012345678901234567890', 12);
+
+  assert.deepEqual(lines, [
+    '123456789012',
+    '345678901234',
+    '567890123456',
+    '7890',
+  ]);
+});
+
+test('getPixKeyDisplayValue returns normalized pix key instead of payload', () => {
+  const value = getPixKeyDisplayValue({
+    pixKeyType: 'phone',
+    pixKey: '+55 (11) 99876-5432',
+  });
+
+  assert.equal(value, '+5511998765432');
+});
+
+test('getExportCardHeight reserves space for title, key lines and bottom padding', () => {
+  const height = getExportCardHeight(4);
+
+  assert.equal(height, 782);
+});
+
+test('getPixKeyTypeLabel returns display label for selected key type', () => {
+  assert.equal(getPixKeyTypeLabel('phone'), 'Telefone');
+});
+
+test('formatAmountForExport returns formatted amount only when positive', () => {
+  assert.equal(formatAmountForExport(19.9), 'Valor: R$ 19.90');
+  assert.equal(formatAmountForExport(0), '');
 });
