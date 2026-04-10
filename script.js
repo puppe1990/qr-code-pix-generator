@@ -1,10 +1,11 @@
 // Pix payload generator following EMV QR Code specification for Brazil
 class PixPayload {
-  constructor(pixKey, merchantName, merchantCity, amount) {
+  constructor(pixKey, merchantName, merchantCity, amount, identifier) {
     this.pixKey = pixKey;
     this.merchantName = merchantName;
     this.merchantCity = merchantCity;
     this.amount = amount;
+    this.identifier = identifier;
   }
 
   formatField(id, value) {
@@ -17,21 +18,19 @@ class PixPayload {
       this.formatField('00', '01'),
       this.formatField(
         '26',
-        this.formatField('00', 'br.gov.bcb.pix') +
+        this.formatField('00', 'BR.GOV.BCB.PIX') +
           this.formatField('01', this.pixKey)
       ),
       this.formatField('52', '0000'),
       this.formatField('53', '986'),
+      this.amount && this.amount > 0
+        ? this.formatField('54', this.amount.toFixed(2))
+        : null,
       this.formatField('58', 'BR'),
       this.formatField('59', sanitizeMerchantName(this.merchantName)),
       this.formatField('60', sanitizeMerchantCity(this.merchantCity)),
-    ];
-
-    if (this.amount && this.amount > 0) {
-      payload.push(this.formatField('54', this.amount.toFixed(2)));
-    }
-
-    payload.push(this.formatField('62', this.formatField('05', '***')));
+      this.formatField('62', this.formatField('05', this.identifier)),
+    ].filter(Boolean);
 
     const payloadPartial = payload.join('');
     const crcField = this.formatField('63', '04');
@@ -58,29 +57,35 @@ class PixPayload {
 const PIX_KEY_CONFIG = {
   cpf: {
     label: 'CPF',
-    placeholder: '000.000.000-00',
-    helper: 'Use 11 digitos do CPF.',
+    placeholder: 'Informe o CPF',
+    helper: '',
   },
   cnpj: {
     label: 'CNPJ',
-    placeholder: '00.000.000/0000-00',
-    helper: 'Use 14 digitos do CNPJ.',
+    placeholder: 'Informe o CNPJ',
+    helper: '',
   },
   email: {
     label: 'E-mail',
-    placeholder: 'seuemail@dominio.com',
-    helper: 'Informe um e-mail Pix valido.',
+    placeholder: 'Informe o email',
+    helper: '',
   },
   phone: {
     label: 'Telefone',
-    placeholder: '+55 11 99999-9999',
-    helper: 'Use telefone com DDI +55.',
+    placeholder: 'Informe o telefone com +55',
+    helper: '',
   },
   random: {
     label: 'Aleatoria',
-    placeholder: '123e4567-e89b-12d3-a456-426614174000',
-    helper: 'Cole sua chave aleatoria completa.',
+    placeholder: 'Informe a chave aleatoria',
+    helper: '',
   },
+};
+
+const PIX_DEFAULTS = {
+  merchantName: 'N',
+  merchantCity: 'C',
+  identifier: '***',
 };
 
 function stripAccents(value) {
@@ -147,20 +152,11 @@ function validatePixKey(type, normalizedKey) {
 function validatePixForm(input) {
   const normalizedKey = normalizePixKey(input.pixKeyType, input.pixKey);
   const keyError = validatePixKey(input.pixKeyType, normalizedKey);
-  const merchantName = String(input.merchantName || '').trim();
-  const merchantCity = String(input.merchantCity || '').trim();
   const amount = Number(input.amount) || 0;
+  const identifier = String(input.identifier || '').trim();
 
   if (keyError) {
     return { ok: false, error: keyError, field: 'pixKey' };
-  }
-
-  if (!merchantName) {
-    return { ok: false, error: 'Nome do recebedor obrigatorio.', field: 'merchantName' };
-  }
-
-  if (!merchantCity) {
-    return { ok: false, error: 'Cidade obrigatoria.', field: 'merchantCity' };
   }
 
   if (amount < 0) {
@@ -170,9 +166,10 @@ function validatePixForm(input) {
   return {
     ok: true,
     normalizedKey,
-    merchantName,
-    merchantCity,
+    merchantName: PIX_DEFAULTS.merchantName,
+    merchantCity: PIX_DEFAULTS.merchantCity,
     amount,
+    identifier: identifier || PIX_DEFAULTS.identifier,
   };
 }
 
@@ -187,7 +184,8 @@ function buildPixPayload(input) {
     validation.normalizedKey,
     validation.merchantName,
     validation.merchantCity,
-    validation.amount
+    validation.amount,
+    validation.identifier
   );
 
   return pix.generate();
@@ -202,6 +200,7 @@ if (typeof document !== 'undefined') {
   const pixKeyInput = document.getElementById('pixKey');
   const pixKeyTypeInput = document.getElementById('pixKeyType');
   const pixKeyHelper = document.getElementById('pixKeyHelper');
+  const identifierInput = document.getElementById('identifier');
   const formError = document.getElementById('formError');
   const qrCanvas = document.getElementById('qrCode');
   const pixCopyPaste = document.getElementById('pixCopyPaste');
@@ -241,8 +240,7 @@ if (typeof document !== 'undefined') {
     return {
       pixKeyType: pixKeyTypeInput.value,
       pixKey: pixKeyInput.value,
-      merchantName: document.getElementById('merchantName').value,
-      merchantCity: document.getElementById('merchantCity').value,
+      identifier: identifierInput.value,
       amount: document.getElementById('amount').value,
     };
   }

@@ -1,6 +1,6 @@
 # QR Code Pix Generator
 
-Gerador simples de QR Code Pix com selecao explicita do tipo de chave, validacao basica por tipo e resultado em modal com `Pix Copia e Cola`.
+Gerador simples de QR Code Pix com formulario reduzido, selecao explicita do tipo de chave, `identificador` opcional e resultado em modal com `Pix Copia e Cola`.
 
 ![Preview do app](./assets/preview.png)
 
@@ -8,6 +8,7 @@ Gerador simples de QR Code Pix com selecao explicita do tipo de chave, validacao
 
 - suporta chaves `CPF`, `CNPJ`, `E-mail`, `Telefone` e `Aleatoria`
 - valida a chave antes de gerar o payload
+- usa um payload mais enxuto com valores internos para os campos minimos de recebedor
 - mostra o QR Code em uma modal
 - permite copiar o codigo Pix gerado
 

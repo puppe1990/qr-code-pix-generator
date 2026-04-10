@@ -7,92 +7,68 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 </head>
-<body class="min-h-screen bg-slate-950 bg-[radial-gradient(circle_at_top,_rgba(56,189,248,0.22),_transparent_38%),linear-gradient(180deg,_#0f172a_0%,_#020617_100%)] p-4 text-slate-100 md:p-8">
-  <div class="mx-auto flex min-h-[calc(100vh-2rem)] max-w-5xl items-center justify-center">
-    <div class="grid w-full gap-6 rounded-[32px] border border-white/10 bg-white/95 p-4 shadow-2xl shadow-cyan-950/30 backdrop-blur md:grid-cols-[1.1fr_0.9fr] md:p-6">
-      <section class="rounded-[28px] bg-slate-950 p-8 text-white">
-        <span class="mb-4 inline-flex rounded-full border border-cyan-400/30 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-cyan-200">Pix simples</span>
-        <h1 class="text-4xl font-black tracking-tight">Gerador de QR Code Pix que nao atrapalha.</h1>
-        <p class="mt-4 max-w-md text-sm leading-6 text-slate-300">Escolha o tipo da chave, preencha os dados e gere o QR Code com copia e cola em uma modal limpa. Sem adivinhar formato e sem resultado perdido na pagina.</p>
+<body class="min-h-screen bg-[#f5f6fb] p-4 text-slate-100 md:p-8">
+  <div class="mx-auto flex min-h-[calc(100vh-2rem)] max-w-7xl items-center justify-center">
+    <section class="w-full rounded-[36px] bg-white p-6 shadow-[0_30px_90px_rgba(15,23,42,0.08)] md:p-10">
+      <div class="mb-10">
+        <h1 class="text-3xl font-black tracking-tight text-slate-800 md:text-4xl">QR Code Pix</h1>
+        <p class="mt-3 max-w-2xl text-sm leading-6 text-slate-500">Formulario reduzido para gerar o copia e cola com menos atrito. Informe a chave Pix, um identificador opcional e o valor.</p>
+      </div>
 
-        <div class="mt-8 grid gap-3 text-sm text-slate-300">
-          <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <strong class="block text-white">Tipos de chave</strong>
-            <span class="mt-1 block">CPF, CNPJ, E-mail, Telefone e Aleatoria com validacao basica.</span>
-          </div>
-          <div class="rounded-2xl border border-white/10 bg-white/5 p-4">
-            <strong class="block text-white">Resultado em modal</strong>
-            <span class="mt-1 block">QR Code, valor e Pix copia e cola em destaque para copiar rapido.</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="rounded-[28px] bg-white p-8 text-slate-900">
-        <div class="mb-8">
-          <h2 class="text-3xl font-black tracking-tight text-slate-900">Cobrar com Pix</h2>
-          <p class="mt-2 text-sm leading-6 text-slate-500">Preencha os dados abaixo. A chave e validada conforme o tipo escolhido antes da geracao.</p>
-        </div>
-
-        <form id="pixForm" class="space-y-5">
+      <form id="pixForm" class="space-y-6">
           <div>
-            <label for="pixKeyType" class="mb-2 block text-sm font-semibold text-slate-700">Tipo de chave Pix</label>
+            <label for="pixKeyType" class="mb-3 block text-xl font-bold text-slate-800">Tipo da Chave</label>
             <select
               id="pixKeyType"
-              class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+              class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-2xl text-slate-800 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
               required
             >
               <option value="cpf">CPF</option>
               <option value="cnpj">CNPJ</option>
-              <option value="email">E-mail</option>
+              <option value="email">Email</option>
               <option value="phone">Telefone</option>
               <option value="random">Aleatoria</option>
             </select>
           </div>
 
           <div>
-            <div class="mb-2 flex items-center justify-between gap-3">
-              <label for="pixKey" class="block text-sm font-semibold text-slate-700">Chave Pix</label>
-              <span id="pixKeyHelper" class="text-xs text-slate-400"></span>
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <label for="pixKey" class="block text-xl font-bold text-slate-800">Chave Pix</label>
+              <span id="pixKeyHelper" class="text-sm text-slate-400"></span>
             </div>
             <input
               type="text"
               id="pixKey"
-              class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+              class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-2xl text-slate-800 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
               required
             >
           </div>
 
           <div>
-            <label for="merchantName" class="mb-2 block text-sm font-semibold text-slate-700">Nome do Recebedor</label>
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <label for="identifier" class="block text-xl font-bold text-slate-800">Identificador</label>
+              <span class="text-lg italic text-slate-500">Opcional</span>
+            </div>
             <input
               type="text"
-              id="merchantName"
-              placeholder="Seu nome ou empresa"
-              class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
-              required
+              id="identifier"
+              placeholder="PGTOLOJA123"
+              class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-2xl text-slate-800 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
             >
           </div>
 
           <div>
-            <label for="merchantCity" class="mb-2 block text-sm font-semibold text-slate-700">Cidade</label>
-            <input
-              type="text"
-              id="merchantCity"
-              placeholder="Sao Paulo"
-              class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
-              required
-            >
-          </div>
-
-          <div>
-            <label for="amount" class="mb-2 block text-sm font-semibold text-slate-700">Valor (opcional)</label>
+            <div class="mb-3 flex items-center justify-between gap-3">
+              <label for="amount" class="block text-xl font-bold text-slate-800">Valor (R$)</label>
+              <span class="text-lg italic text-slate-500">Opcional</span>
+            </div>
             <input
               type="number"
               id="amount"
-              placeholder="0.00"
+              placeholder="0,00"
               step="0.01"
               min="0"
-              class="w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+              class="w-full rounded-2xl border border-slate-300 bg-white px-4 py-4 text-2xl text-slate-800 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-100"
             >
           </div>
 
@@ -100,13 +76,12 @@
 
           <button
             type="submit"
-            class="w-full rounded-2xl bg-cyan-500 px-4 py-4 text-sm font-bold uppercase tracking-[0.18em] text-slate-950 transition hover:bg-cyan-400"
+            class="w-full rounded-2xl bg-[#f17b2c] px-4 py-4 text-lg font-bold text-white transition hover:bg-[#df6b1f]"
           >
             Gerar QR Code
           </button>
-        </form>
-      </section>
-    </div>
+      </form>
+    </section>
   </div>
 
   <div id="resultModal" class="fixed inset-0 z-50 hidden">

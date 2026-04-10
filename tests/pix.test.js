@@ -27,8 +27,6 @@ test('validatePixForm rejects invalid CPF length', () => {
   const result = validatePixForm({
     pixKeyType: 'cpf',
     pixKey: '123',
-    merchantName: 'Empresa Teste',
-    merchantCity: 'Sao Paulo',
     amount: 0,
   });
 
@@ -40,8 +38,6 @@ test('validatePixForm rejects invalid email format', () => {
   const result = validatePixForm({
     pixKeyType: 'email',
     pixKey: 'email-invalido',
-    merchantName: 'Empresa Teste',
-    merchantCity: 'Sao Paulo',
     amount: 0,
   });
 
@@ -53,8 +49,6 @@ test('validatePixForm accepts valid Brazilian phone with country code', () => {
   const result = validatePixForm({
     pixKeyType: 'phone',
     pixKey: '+55 (11) 99876-5432',
-    merchantName: 'Empresa Teste',
-    merchantCity: 'Sao Paulo',
     amount: 0,
   });
 
@@ -66,8 +60,6 @@ test('validatePixForm rejects empty random key', () => {
   const result = validatePixForm({
     pixKeyType: 'random',
     pixKey: '   ',
-    merchantName: 'Empresa Teste',
-    merchantCity: 'Sao Paulo',
     amount: 0,
   });
 
@@ -79,22 +71,20 @@ test('buildPixPayload generates payload for CPF key', () => {
   const payload = buildPixPayload({
     pixKeyType: 'cpf',
     pixKey: '529.982.247-25',
-    merchantName: 'Loja Centro',
-    merchantCity: 'Curitiba',
     amount: 10.5,
   });
 
-  assert.match(payload, /br\.gov\.bcb\.pix/);
+  assert.match(payload, /BR\.GOV\.BCB\.PIX/);
   assert.match(payload, /52998224725/);
   assert.match(payload, /540510\.50/);
+  assert.match(payload, /5901N/);
+  assert.match(payload, /6001C/);
 });
 
 test('buildPixPayload generates payload for CNPJ key', () => {
   const payload = buildPixPayload({
     pixKeyType: 'cnpj',
     pixKey: '12.345.678/0001-90',
-    merchantName: 'Loja Centro',
-    merchantCity: 'Curitiba',
     amount: 0,
   });
 
@@ -105,8 +95,6 @@ test('buildPixPayload generates payload for email key', () => {
   const payload = buildPixPayload({
     pixKeyType: 'email',
     pixKey: ' pix@empresa.com.br ',
-    merchantName: 'Loja Centro',
-    merchantCity: 'Curitiba',
     amount: 0,
   });
 
@@ -117,8 +105,6 @@ test('buildPixPayload generates payload for phone key', () => {
   const payload = buildPixPayload({
     pixKeyType: 'phone',
     pixKey: '+55 (11) 99876-5432',
-    merchantName: 'Loja Centro',
-    merchantCity: 'Curitiba',
     amount: 0,
   });
 
@@ -129,11 +115,21 @@ test('buildPixPayload generates payload for random key without amount', () => {
   const payload = buildPixPayload({
     pixKeyType: 'random',
     pixKey: '123e4567-e89b-12d3-a456-426614174000',
-    merchantName: 'Loja Centro',
-    merchantCity: 'Curitiba',
     amount: 0,
   });
 
   assert.match(payload, /123e4567-e89b-12d3-a456-426614174000/);
   assert.doesNotMatch(payload, /54\d{2}/);
+});
+
+test('buildPixPayload uses custom identifier when provided', () => {
+  const payload = buildPixPayload({
+    pixKeyType: 'cnpj',
+    pixKey: '01.487.734/0001-01',
+    identifier: 'PGTOLOJA123',
+    amount: 1680,
+  });
+
+  assert.match(payload, /62150511PGTOLOJA123/);
+  assert.match(payload, /54071680\.00/);
 });
