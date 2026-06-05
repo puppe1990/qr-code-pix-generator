@@ -10,6 +10,11 @@ const {
   getExportCardHeight,
   getPixKeyTypeLabel,
   formatAmountForExport,
+  GRADIENT_PRESETS,
+  normalizeHexColor,
+  getGradientPreset,
+  resolveExportGradient,
+  getExportGradientStops,
 } = require('../script.js');
 
 test('normalizePixKey normalizes CPF to digits only', () => {
@@ -190,4 +195,86 @@ test('getPixKeyTypeLabel returns display label for selected key type', () => {
 test('formatAmountForExport returns formatted amount only when positive', () => {
   assert.equal(formatAmountForExport(19.9), 'Valor: R$ 19.90');
   assert.equal(formatAmountForExport(0), '');
+});
+
+test('GRADIENT_PRESETS exposes named presets with three color stops', () => {
+  assert.ok(GRADIENT_PRESETS.length >= 3);
+  assert.ok(GRADIENT_PRESETS.some((preset) => preset.id === 'ocean'));
+  GRADIENT_PRESETS
+    .filter((preset) => preset.stops)
+    .forEach((preset) => {
+      assert.equal(preset.stops.length, 3);
+      preset.stops.forEach((stop) => {
+        assert.match(stop.color, /^#[0-9a-fA-F]{6}$/);
+      });
+    });
+});
+
+test('normalizeHexColor accepts shorthand and full hex with or without hash', () => {
+  assert.equal(normalizeHexColor('#fff'), '#ffffff');
+  assert.equal(normalizeHexColor('0F172A'), '#0f172a');
+  assert.equal(normalizeHexColor('#082f49'), '#082f49');
+});
+
+test('normalizeHexColor rejects invalid hex values', () => {
+  assert.equal(normalizeHexColor(''), null);
+  assert.equal(normalizeHexColor('not-a-color'), null);
+  assert.equal(normalizeHexColor('#12345'), null);
+});
+
+test('getGradientPreset returns preset by id and falls back to default', () => {
+  const ocean = getGradientPreset('ocean');
+  assert.equal(ocean.id, 'ocean');
+  assert.deepEqual(ocean.stops[0], { position: 0, color: '#0f172a' });
+
+  const fallback = getGradientPreset('unknown-id');
+  assert.equal(fallback.id, 'ocean');
+});
+
+test('resolveExportGradient uses preset stops when preset id is provided', () => {
+  const result = resolveExportGradient({ presetId: 'emerald' });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.presetId, 'emerald');
+  assert.equal(result.stops.length, 3);
+});
+
+test('resolveExportGradient builds custom stops from three hex colors', () => {
+  const result = resolveExportGradient({
+    presetId: 'custom',
+    color1: '#111111',
+    color2: '#222222',
+    color3: '#333333',
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.presetId, 'custom');
+  assert.deepEqual(result.stops, [
+    { position: 0, color: '#111111' },
+    { position: 0.55, color: '#222222' },
+    { position: 1, color: '#333333' },
+  ]);
+});
+
+test('resolveExportGradient rejects custom mode with invalid hex', () => {
+  const result = resolveExportGradient({
+    presetId: 'custom',
+    color1: '#111111',
+    color2: 'not-a-color',
+    color3: '#333333',
+  });
+
+  assert.equal(result.ok, false);
+  assert.match(result.error, /hex/i);
+  assert.equal(result.field, 'gradientColor2');
+});
+
+test('getExportGradientStops returns stops for valid gradient config', () => {
+  const stops = getExportGradientStops({
+    presetId: 'sunset',
+  });
+
+  assert.equal(stops.length, 3);
+  assert.equal(stops[0].position, 0);
+  assert.match(stops[2].color, /^#[0-9A-F]{6}$/i);
 });

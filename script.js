@@ -232,6 +232,141 @@ function formatAmountForExport(amount) {
   return amount > 0 ? `Valor: R$ ${amount.toFixed(2)}` : '';
 }
 
+const GRADIENT_DEFAULT_PRESET_ID = 'ocean';
+
+const GRADIENT_PRESETS = [
+  {
+    id: 'ocean',
+    label: 'Oceano',
+    stops: [
+      { position: 0, color: '#0f172a' },
+      { position: 0.55, color: '#082f49' },
+      { position: 1, color: '#020617' },
+    ],
+  },
+  {
+    id: 'emerald',
+    label: 'Esmeralda',
+    stops: [
+      { position: 0, color: '#064e3b' },
+      { position: 0.55, color: '#047857' },
+      { position: 1, color: '#022c22' },
+    ],
+  },
+  {
+    id: 'purple',
+    label: 'Roxo',
+    stops: [
+      { position: 0, color: '#3b0764' },
+      { position: 0.55, color: '#6b21a8' },
+      { position: 1, color: '#1e1b4b' },
+    ],
+  },
+  {
+    id: 'sunset',
+    label: 'Por do sol',
+    stops: [
+      { position: 0, color: '#7c2d12' },
+      { position: 0.55, color: '#ea580c' },
+      { position: 1, color: '#431407' },
+    ],
+  },
+  {
+    id: 'custom',
+    label: 'Personalizado',
+    stops: null,
+  },
+];
+
+const GRADIENT_CUSTOM_DEFAULTS = {
+  color1: '#0f172a',
+  color2: '#082f49',
+  color3: '#020617',
+};
+
+function normalizeHexColor(value) {
+  const trimmed = String(value || '').trim().replace(/^#/, '');
+
+  if (/^[0-9a-fA-F]{3}$/.test(trimmed)) {
+    return `#${trimmed.split('').map((char) => char + char).join('').toLowerCase()}`;
+  }
+
+  if (/^[0-9a-fA-F]{6}$/.test(trimmed)) {
+    return `#${trimmed.toLowerCase()}`;
+  }
+
+  return null;
+}
+
+function getGradientPreset(presetId) {
+  return GRADIENT_PRESETS.find((preset) => preset.id === presetId)
+    || GRADIENT_PRESETS.find((preset) => preset.id === GRADIENT_DEFAULT_PRESET_ID);
+}
+
+function isCustomGradientPreset(presetId) {
+  return presetId === 'custom';
+}
+
+function resolveExportGradient(input) {
+  const presetId = String(input?.presetId || GRADIENT_DEFAULT_PRESET_ID).trim();
+  const preset = getGradientPreset(presetId);
+
+  if (!isCustomGradientPreset(preset.id)) {
+    return {
+      ok: true,
+      presetId: preset.id,
+      stops: preset.stops.map((stop) => ({ ...stop })),
+    };
+  }
+
+  const color1 = normalizeHexColor(input?.color1 ?? GRADIENT_CUSTOM_DEFAULTS.color1);
+  const color2 = normalizeHexColor(input?.color2 ?? GRADIENT_CUSTOM_DEFAULTS.color2);
+  const color3 = normalizeHexColor(input?.color3 ?? GRADIENT_CUSTOM_DEFAULTS.color3);
+
+  if (!color1) {
+    return { ok: false, error: 'Cor inicial invalida. Use hexadecimal (#RRGGBB).', field: 'gradientColor1' };
+  }
+
+  if (!color2) {
+    return { ok: false, error: 'Cor central invalida. Use hexadecimal (#RRGGBB).', field: 'gradientColor2' };
+  }
+
+  if (!color3) {
+    return { ok: false, error: 'Cor final invalida. Use hexadecimal (#RRGGBB).', field: 'gradientColor3' };
+  }
+
+  return {
+    ok: true,
+    presetId: 'custom',
+    stops: [
+      { position: 0, color: color1 },
+      { position: 0.55, color: color2 },
+      { position: 1, color: color3 },
+    ],
+  };
+}
+
+function getExportGradientStops(input) {
+  const resolved = resolveExportGradient(input);
+
+  if (!resolved.ok) {
+    throw new Error(resolved.error);
+  }
+
+  return resolved.stops;
+}
+
+function applyExportGradient(context, width, height, stops) {
+  const gradient = context.createLinearGradient(0, 0, width, height);
+
+  stops.forEach((stop) => {
+    gradient.addColorStop(stop.position, stop.color);
+  });
+
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, width, height);
+}
+
 function getExportCardHeight(lineCount) {
   const qrPadding = 24;
   const qrSize = 280;
@@ -266,6 +401,13 @@ if (typeof document !== 'undefined') {
   const closeModalBtn = document.getElementById('closeModalBtn');
   const modalOverlay = document.getElementById('modalOverlay');
   const savePngBtn = document.getElementById('savePngBtn');
+  const gradientPresetInput = document.getElementById('gradientPreset');
+  const customGradientFields = document.getElementById('customGradientFields');
+  const gradientColor1Input = document.getElementById('gradientColor1');
+  const gradientColor2Input = document.getElementById('gradientColor2');
+  const gradientColor3Input = document.getElementById('gradientColor3');
+  const gradientError = document.getElementById('gradientError');
+  const gradientPreview = document.getElementById('gradientPreview');
   let lastQrIdentifier = PIX_DEFAULTS.identifier;
   let lastPixKeyDisplayValue = '';
   let lastPixKeyTypeLabel = '';
@@ -304,6 +446,55 @@ if (typeof document !== 'undefined') {
       identifier: identifierInput.value,
       amount: document.getElementById('amount').value,
     };
+  }
+
+  function readGradientFormValues() {
+    return {
+      presetId: gradientPresetInput.value,
+      color1: gradientColor1Input.value,
+      color2: gradientColor2Input.value,
+      color3: gradientColor3Input.value,
+    };
+  }
+
+  function clearGradientError() {
+    gradientError.textContent = '';
+    gradientError.classList.add('hidden');
+  }
+
+  function showGradientError(message) {
+    gradientError.textContent = message;
+    gradientError.classList.remove('hidden');
+  }
+
+  function updateCustomGradientVisibility() {
+    const isCustom = isCustomGradientPreset(gradientPresetInput.value);
+    customGradientFields.classList.toggle('hidden', !isCustom);
+  }
+
+  function updateGradientPreview() {
+    const resolved = resolveExportGradient(readGradientFormValues());
+
+    if (!resolved.ok) {
+      gradientPreview.style.background = '#e2e8f0';
+      return;
+    }
+
+    const [firstStop, middleStop, lastStop] = resolved.stops;
+    gradientPreview.style.background = `linear-gradient(135deg, ${firstStop.color} 0%, ${middleStop.color} 55%, ${lastStop.color} 100%)`;
+  }
+
+  function syncCustomGradientInputsFromPreset() {
+    if (isCustomGradientPreset(gradientPresetInput.value)) {
+      return;
+    }
+
+    const preset = getGradientPreset(gradientPresetInput.value);
+    const [firstStop, middleStop, lastStop] = preset.stops;
+
+    gradientColor1Input.value = firstStop.color;
+    gradientColor2Input.value = middleStop.color;
+    gradientColor3Input.value = lastStop.color;
   }
 
   async function handleSubmit(event) {
@@ -368,6 +559,15 @@ if (typeof document !== 'undefined') {
       return;
     }
 
+    clearGradientError();
+
+    const gradientResolution = resolveExportGradient(readGradientFormValues());
+
+    if (!gradientResolution.ok) {
+      showGradientError(gradientResolution.error);
+      return;
+    }
+
     const exportCanvas = document.createElement('canvas');
     const exportContext = exportCanvas.getContext('2d');
     const qrSize = 280;
@@ -381,13 +581,7 @@ if (typeof document !== 'undefined') {
     exportCanvas.width = width;
     exportCanvas.height = height;
 
-    const gradient = exportContext.createLinearGradient(0, 0, width, height);
-    gradient.addColorStop(0, '#0f172a');
-    gradient.addColorStop(0.55, '#082f49');
-    gradient.addColorStop(1, '#020617');
-
-    exportContext.fillStyle = gradient;
-    exportContext.fillRect(0, 0, width, height);
+    applyExportGradient(exportContext, width, height, gradientResolution.stops);
 
     exportContext.fillStyle = 'rgba(34, 211, 238, 0.16)';
     exportContext.beginPath();
@@ -449,7 +643,18 @@ if (typeof document !== 'undefined') {
     link.click();
   }
 
+  function handleGradientPresetChange() {
+    clearGradientError();
+    syncCustomGradientInputsFromPreset();
+    updateCustomGradientVisibility();
+    updateGradientPreview();
+  }
+
   pixKeyTypeInput.addEventListener('change', updatePixKeyPlaceholder);
+  gradientPresetInput.addEventListener('change', handleGradientPresetChange);
+  gradientColor1Input.addEventListener('input', updateGradientPreview);
+  gradientColor2Input.addEventListener('input', updateGradientPreview);
+  gradientColor3Input.addEventListener('input', updateGradientPreview);
   form.addEventListener('submit', handleSubmit);
   copyBtn.addEventListener('click', handleCopy);
   savePngBtn.addEventListener('click', handleSavePng);
@@ -463,6 +668,7 @@ if (typeof document !== 'undefined') {
   });
 
   updatePixKeyPlaceholder();
+  handleGradientPresetChange();
 }
 
 if (typeof module !== 'undefined') {
@@ -480,5 +686,13 @@ if (typeof module !== 'undefined') {
     formatAmountForExport,
     sanitizeMerchantName,
     sanitizeMerchantCity,
+    GRADIENT_PRESETS,
+    GRADIENT_DEFAULT_PRESET_ID,
+    normalizeHexColor,
+    getGradientPreset,
+    isCustomGradientPreset,
+    resolveExportGradient,
+    getExportGradientStops,
+    applyExportGradient,
   };
 }

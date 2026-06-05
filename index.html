@@ -146,6 +146,66 @@
             </div>
           </div>
 
+          <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <label for="gradientPreset" class="block text-sm font-semibold text-slate-700">Gradiente do PNG</label>
+                <p class="mt-1 text-xs text-slate-500">Escolha um tema pronto ou defina as cores em hexadecimal.</p>
+              </div>
+              <div
+                id="gradientPreview"
+                class="h-12 w-20 shrink-0 rounded-xl border border-slate-200 shadow-inner"
+                aria-hidden="true"
+              ></div>
+            </div>
+
+            <select
+              id="gradientPreset"
+              class="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+            >
+              <option value="ocean">Oceano</option>
+              <option value="emerald">Esmeralda</option>
+              <option value="purple">Roxo</option>
+              <option value="sunset">Por do sol</option>
+              <option value="custom">Personalizado</option>
+            </select>
+
+            <div id="customGradientFields" class="mt-3 hidden grid gap-3 sm:grid-cols-3">
+              <div>
+                <label for="gradientColor1" class="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Cor inicial</label>
+                <input
+                  type="text"
+                  id="gradientColor1"
+                  value="#0f172a"
+                  placeholder="#0f172a"
+                  class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+                >
+              </div>
+              <div>
+                <label for="gradientColor2" class="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Cor central</label>
+                <input
+                  type="text"
+                  id="gradientColor2"
+                  value="#082f49"
+                  placeholder="#082f49"
+                  class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+                >
+              </div>
+              <div>
+                <label for="gradientColor3" class="mb-1 block text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Cor final</label>
+                <input
+                  type="text"
+                  id="gradientColor3"
+                  value="#020617"
+                  placeholder="#020617"
+                  class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 font-mono text-sm text-slate-900 outline-none transition focus:border-cyan-500 focus:ring-2 focus:ring-cyan-200"
+                >
+              </div>
+            </div>
+
+            <p id="gradientError" class="mt-3 hidden rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700"></p>
+          </div>
+
           <button
             id="savePngBtn"
             type="button"
