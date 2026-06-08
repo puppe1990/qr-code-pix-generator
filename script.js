@@ -272,6 +272,15 @@ const GRADIENT_PRESETS = [
     ],
   },
   {
+    id: 'burgundy',
+    label: 'Borgonha',
+    stops: [
+      { position: 0, color: '#b85c6e' },
+      { position: 0.55, color: '#8b2e3b' },
+      { position: 1, color: '#4a1520' },
+    ],
+  },
+  {
     id: 'custom',
     label: 'Personalizado',
     stops: null,
