@@ -376,23 +376,47 @@ function applyExportGradient(context, width, height, stops) {
   context.fillRect(0, 0, width, height);
 }
 
-function getExportCardHeight(lineCount) {
-  const qrPadding = 24;
-  const qrSize = 280;
-  const qrBoxY = 196;
-  const qrBoxSize = qrSize + (qrPadding * 2);
-  const blockTopSpacing = 56;
-  const titleToLinesSpacing = 42;
-  const textLineHeight = 30;
-  const bottomPadding = 40;
+const EXPORT_LAYOUT = {
+  qrPadding: 24,
+  qrSize: 280,
+  qrBoxY: 196,
+  blockTopSpacing: 56,
+  titleToLinesSpacing: 42,
+  textLineHeight: 30,
+  bottomPadding: 40,
+  amountBlockHeight: 58,
+  commentSectionSpacing: 28,
+};
+
+function getExportCommentBlockHeight(commentLineCount) {
+  if (!commentLineCount || commentLineCount < 1) {
+    return 0;
+  }
+
+  return EXPORT_LAYOUT.commentSectionSpacing
+    + EXPORT_LAYOUT.titleToLinesSpacing
+    + (commentLineCount * EXPORT_LAYOUT.textLineHeight);
+}
+
+function normalizePngComment(value) {
+  return String(value || '').trim().replace(/\s+/g, ' ');
+}
+
+function wrapPngCommentForExport(value, lineLength = 32) {
+  return wrapPixKeyForExport(normalizePngComment(value), lineLength);
+}
+
+function getExportCardHeight(lineCount, commentLineCount = 0) {
+  const qrBoxSize = EXPORT_LAYOUT.qrSize + (EXPORT_LAYOUT.qrPadding * 2);
   const normalizedLineCount = Math.max(lineCount, 1);
 
-  return qrBoxY
+  return EXPORT_LAYOUT.qrBoxY
     + qrBoxSize
-    + blockTopSpacing
-    + titleToLinesSpacing
-    + (normalizedLineCount * textLineHeight)
-    + bottomPadding;
+    + EXPORT_LAYOUT.blockTopSpacing
+    + EXPORT_LAYOUT.titleToLinesSpacing
+    + (normalizedLineCount * EXPORT_LAYOUT.textLineHeight)
+    + getExportCommentBlockHeight(commentLineCount)
+    + EXPORT_LAYOUT.bottomPadding;
 }
 
 if (typeof document !== 'undefined') {
@@ -417,6 +441,7 @@ if (typeof document !== 'undefined') {
   const gradientColor3Input = document.getElementById('gradientColor3');
   const gradientError = document.getElementById('gradientError');
   const gradientPreview = document.getElementById('gradientPreview');
+  const pngCommentInput = document.getElementById('pngComment');
   let lastQrIdentifier = PIX_DEFAULTS.identifier;
   let lastPixKeyDisplayValue = '';
   let lastPixKeyTypeLabel = '';
@@ -579,13 +604,14 @@ if (typeof document !== 'undefined') {
 
     const exportCanvas = document.createElement('canvas');
     const exportContext = exportCanvas.getContext('2d');
-    const qrSize = 280;
-    const qrPadding = 24;
+    const qrSize = EXPORT_LAYOUT.qrSize;
+    const qrPadding = EXPORT_LAYOUT.qrPadding;
     const width = 720;
     const keyLines = wrapPixKeyForExport(`${lastPixKeyTypeLabel}: ${lastPixKeyDisplayValue}`, 24);
-    const textLineHeight = 30;
-    const amountBlockHeight = lastAmountDisplayValue ? 58 : 0;
-    const height = getExportCardHeight(keyLines.length) + amountBlockHeight;
+    const commentLines = wrapPngCommentForExport(pngCommentInput.value);
+    const textLineHeight = EXPORT_LAYOUT.textLineHeight;
+    const amountBlockHeight = lastAmountDisplayValue ? EXPORT_LAYOUT.amountBlockHeight : 0;
+    const height = getExportCardHeight(keyLines.length, commentLines.length) + amountBlockHeight;
 
     exportCanvas.width = width;
     exportCanvas.height = height;
@@ -646,6 +672,21 @@ if (typeof document !== 'undefined') {
       exportContext.fillText(line, width / 2, textStartY + 42 + (index * textLineHeight));
     });
 
+    if (commentLines.length > 0) {
+      const commentStartY = textStartY + 42 + (keyLines.length * textLineHeight) + EXPORT_LAYOUT.commentSectionSpacing;
+
+      exportContext.fillStyle = '#67e8f9';
+      exportContext.font = '700 20px Arial';
+      exportContext.fillText('Comentario', width / 2, commentStartY);
+
+      exportContext.fillStyle = '#e2e8f0';
+      exportContext.font = '400 20px Arial';
+
+      commentLines.forEach((line, index) => {
+        exportContext.fillText(line, width / 2, commentStartY + 42 + (index * textLineHeight));
+      });
+    }
+
     const link = document.createElement('a');
     link.href = exportCanvas.toDataURL('image/png');
     link.download = buildQrCodeFilename(lastQrIdentifier);
@@ -691,6 +732,10 @@ if (typeof module !== 'undefined') {
     wrapPixKeyForExport,
     getPixKeyDisplayValue,
     getExportCardHeight,
+    getExportCommentBlockHeight,
+    normalizePngComment,
+    wrapPngCommentForExport,
+    EXPORT_LAYOUT,
     getPixKeyTypeLabel,
     formatAmountForExport,
     sanitizeMerchantName,

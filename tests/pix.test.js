@@ -8,6 +8,9 @@ const {
   wrapPixKeyForExport,
   getPixKeyDisplayValue,
   getExportCardHeight,
+  getExportCommentBlockHeight,
+  normalizePngComment,
+  wrapPngCommentForExport,
   getPixKeyTypeLabel,
   formatAmountForExport,
   GRADIENT_PRESETS,
@@ -186,6 +189,32 @@ test('getExportCardHeight reserves space for title, key lines and bottom padding
   const height = getExportCardHeight(4);
 
   assert.equal(height, 782);
+});
+
+test('getExportCardHeight adds space for comment lines when provided', () => {
+  const height = getExportCardHeight(2, 2);
+
+  assert.equal(height, 852);
+});
+
+test('normalizePngComment trims and collapses whitespace', () => {
+  assert.equal(normalizePngComment('  Pagamento   do   pedido  '), 'Pagamento do pedido');
+  assert.equal(normalizePngComment('   '), '');
+});
+
+test('wrapPngCommentForExport splits long comments into readable lines', () => {
+  const lines = wrapPngCommentForExport('Pagamento referente ao pedido numero 123 da loja virtual', 20);
+
+  assert.deepEqual(lines, [
+    'Pagamento referente ',
+    'ao pedido numero 123',
+    ' da loja virtual',
+  ]);
+});
+
+test('getExportCommentBlockHeight returns zero when there are no comment lines', () => {
+  assert.equal(getExportCommentBlockHeight(0), 0);
+  assert.equal(getExportCommentBlockHeight(), 0);
 });
 
 test('getPixKeyTypeLabel returns display label for selected key type', () => {
